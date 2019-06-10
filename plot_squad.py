@@ -95,7 +95,7 @@ def get_team_split_image(team, ttype):
     for index, row in squad.iterrows():
         if row['Pos'] in positions:
             x, y = positions[row['Pos']]
-            centerx = width / 8.0 * (6 - x + 1)
+            centerx = width / 8.0 * (x + 1)
             centery = height / 8.0 * (6 - y + 1)
             draw_player(centerx, centery, radius, draw, row, ttype)
 

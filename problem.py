@@ -70,7 +70,7 @@ def solve_optimal_transfer_problem(team_name, options=None):
                 [],  # pos
                 0,  # value
                 current_member['overall'],
-                None,  # potential
+                current_member['potential'],  # potential
                 player_db['player_id'].max()+1
             ]
 
@@ -112,6 +112,12 @@ def solve_optimal_transfer_problem(team_name, options=None):
         rating[j] == overall[member[j]] + so.quick_sum(
             transfer[i, j] * (overall[i] - overall[member[j]]) for (i, j2) in ELIG if j==j2) for j in POSITIONS), name='transfer_con')
 
+    # Potential rating alternative
+
+    # m.add_constraints((
+    #     rating[j] == overall[member[j]] + so.quick_sum(
+    #         transfer[i, j] * (potential[i] - overall[member[j]]) for (i, j2) in ELIG if j==j2) for j in POSITIONS), name='potential_con')
+
     m.add_constraints((
         so.quick_sum(transfer[i, j] for (i2, j) in ELIG if i==i2) <= 1 for i in PLAYERS), name='only_one_position')
 
@@ -131,19 +137,21 @@ def solve_optimal_transfer_problem(team_name, options=None):
             if (player, pos) not in ELIG:
                 continue
             if transfer[player, pos].get_value() > 0.5:
-                print('{}: {} ({}), previous: {} ({}), paid: {}'.format(
-                    pos_str[pos], name[player], overall[player], name[member[pos]], c_overall[pos], value[player]
+                print('{}: {} ({}, pot:{}), previous: {} ({}), paid: {}'.format(
+                    pos_str[pos], name[player], overall[player], potential[player], name[member[pos]], c_overall[pos], value[player]
                     ))
                 new_players.append(name[player])
                 final_team.append([pos_str[pos], name[member[pos]],
                                   c_overall[pos], name[player],
-                                  overall[player], value[player]])
+                                  overall[player],
+                                  potential[player],
+                                  value[player]])
                 break
         else:
             print('{}: {} ({})'.format(pos_str[pos], name[member[pos]], c_overall[pos]))
-            final_team.append([pos_str[pos], name[member[pos]], c_overall[pos], name[member[pos]], c_overall[pos], 0])
+            final_team.append([pos_str[pos], name[member[pos]], c_overall[pos], name[member[pos]], c_overall[pos], c_overall[pos], 0])
 
-    final_team = pd.DataFrame(final_team, columns=['Pos', 'Old', 'Old.R', 'New', 'New.R', 'Paid'])
+    final_team = pd.DataFrame(final_team, columns=['Pos', 'Old', 'Old.R', 'New', 'New.R', 'New.Pot', 'Paid'])
     final_team = final_team.append(final_team.sum(numeric_only=True), ignore_index=True)
 
     money_spent = so.quick_sum(value[i] * transfer[i, j] for (i, j) in ELIG).get_value()
