@@ -61,6 +61,9 @@ font = ImageFont.truetype("arial", 13)
 font_title = ImageFont.truetype("arial", 15)
 radius = 12
 
+old_rating = 'Old.R' # or 'Old.Pot'
+new_rating = 'New.R' # or 'New.Pot'
+
 def convert_csv_to_plot():
 
     for team in glob.glob('squads/*.csv'):
@@ -81,13 +84,14 @@ def get_team_split_image(team, ttype):
     team_name = team.split('\\')[1].split('.')[0]
     print(team_name, ttype)
 
+
     squad = pd.read_csv(team)
     im = Image.open("soccer_field_small.jpg")
     width, height = im.size
     draw = ImageDraw.Draw(im)
 
     draw.rectangle([0, 0, width, 20], fill='white')
-    team_rating = squad['Old.R'] if ttype == 'old' else squad['New.R']
+    team_rating = squad[old_rating] if ttype == 'old' else squad[new_rating]
     title_text = team_name + ' ({:.0f})'.format(team_rating.iloc[-1])
     w, h = font_title.getsize(title_text)
     draw.text((width / 2 - w / 2, 2), title_text, font=font_title, fill='gray')
@@ -107,7 +111,7 @@ def draw_player(centerx, centery, radius, draw, row, ptype):
         circle_color = 'blue'
     else:
         circle_color = 'red'
-    player_rating = str(round(row['Old.R'] if ptype == 'old' else row['New.R']))
+    player_rating = str(round(row[old_rating] if ptype == 'old' else row[new_rating]))
     player_name = row['Old'] if ptype == 'old' else row['New']
 
     # Draw Circle
