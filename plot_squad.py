@@ -67,6 +67,14 @@ new_rating = 'New.R' # or 'New.Pot'
 def convert_csv_to_plot():
 
     for team in glob.glob('squads/*.csv'):
+        team_name = team.split('\\')[1].split('.')[0]
+
+        # Only right side
+        # im_right = get_team_split_image(team, 'new')
+        #
+        # im_right.save('squads/{}.png'.format(team_name), 'PNG', quality=90)
+        # continue
+
         im_left = get_team_split_image(team, 'old')
         im_right = get_team_split_image(team, 'new')
 
@@ -75,7 +83,7 @@ def convert_csv_to_plot():
         background.paste(im_left, (0, 0))
         background.paste(im_right, (490, 0))
 
-        team_name = team.split('\\')[1].split('.')[0]
+
         background.save('squads/{}.png'.format(team_name), 'PNG', quality=90)
 
     # PIL.Image.fromarray

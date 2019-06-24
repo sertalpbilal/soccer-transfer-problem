@@ -15,7 +15,7 @@ def solve_optimal_transfer_problem(team_name, options=None):
 
     if options is None:
         options = {'age_limit': 33}
-    
+
     team_info = get_team_info(team_name)
     
     if os.path.isfile('playerdb.pickle'):
@@ -36,8 +36,18 @@ def solve_optimal_transfer_problem(team_name, options=None):
     eligible = []
     for i, pos in enumerate(team_info['positions']):
         print('Filtering eligible candidates for', pos)
+        if pos in ('RCB', 'LCB'):
+            filter_pos = 'CB'
+        elif pos in ('RCM', 'LCM'):
+            filter_pos = 'CM'
+        elif pos in ('LS', 'RS'):
+            filter_pos = 'ST'
+        elif pos in ('LDM', 'RDM'):
+            filter_pos = 'DM'
+        else:
+            filter_pos = pos
         # Can play for position
-        filtered = player_db[player_db['pos'].str.contains(pos)]
+        filtered = player_db[player_db['pos'].str.contains(filter_pos)]
         # Has no missing value
         filtered = filtered[filtered['value'] > 0]
         # Under budget
@@ -124,6 +134,13 @@ def solve_optimal_transfer_problem(team_name, options=None):
     m.add_constraints((
         so.quick_sum(transfer[i, j] for (i, j2) in ELIG if j==j2) <= 1 for j in POSITIONS), name='only_one_transfer')
 
+    for j in POSITIONS:
+        print(j, pos_str[j], len([1 for (i, j2) in ELIG if j==j2]))
+
+    if team_name is None:
+        m.add_constraints((
+            so.quick_sum(transfer[i, j] for (i, j2) in ELIG if j==j2) == 1 for j in POSITIONS), name='transfer_one')
+
     m.solve()
     
     old_rating = sum(c_overall)
@@ -182,11 +199,16 @@ if __name__ == '__main__':
     results = [solve_optimal_transfer_problem(team, options) for team in teams]
 
     # Case 2: Budget limitations
-    #results = []
-    #for team in teams:
-    #    for budget in [1e+7*i for i in range(21)]:
-    #        options = {'age_limit': 33, 'budget_limit': budget}
-    #        results.append(solve_optimal_transfer_problem(team, options))
+    # teams = ['Liverpool']
+    # results = []
+    # for team in teams:
+    #     for budget in [1e+7*i for i in range(21)]:
+    #         options = {'age_limit': 33, 'budget_limit': budget}
+    #         results.append(solve_optimal_transfer_problem(team, options))
+
+    # Case 3: Empty Team
+    # options = {'age_limit': 23, 'budget_limit': 150*1e+6}
+    # results = [solve_optimal_transfer_problem(None, options)]
 
     pd.set_option('display.max_colwidth', 200)
 

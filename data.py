@@ -83,15 +83,20 @@ def read_players_page(soup):
 
 def get_player_info(player):
 
-    soup = get_url(player)
-    pinfo = {'link': player}
-    # Name
-    t = soup.find('div', {'class': 'meta'}).find('a').previousSibling
-    pinfo['name'] = t.string.split('(')[0].rstrip()
-    t = soup.find('div', {'class': 'card-body stats'})
-    overall = int(t.find('span', {'class': 'label'}).text)
-    pinfo['overall'] = overall
-    return pinfo
+    if player != '':
+
+        soup = get_url(player)
+        pinfo = {'link': player}
+        # Name
+        t = soup.find('div', {'class': 'meta'}).find('a').previousSibling
+        pinfo['name'] = t.string.split('(')[0].rstrip()
+        t = soup.find('div', {'class': 'card-body stats'})
+        overall = int(t.find('span', {'class': 'label'}).text)
+        pinfo['overall'] = overall
+        return pinfo
+    else:
+        pinfo = {'link': '', 'name': '', 'overall': 0, 'potential': 0}
+        return pinfo
 
 def get_team_info(team):
     
@@ -104,34 +109,43 @@ def get_team_info(team):
                 team_url = link.get('href')
                 break
 
-    # At this point we should have team id
-    url = str(team_url)
-    soup = get_url(url)
-    
-    budget = str(soup.find('label', string='Transfer Budget').next.next).replace('\t', '')
-    budget = fix_currency(budget)
-    
-    startings = soup.find_all('tr', class_='starting')
-    player_list = []
-    position_list = []
-    ratings = []
-    team_info = {}
-    
-    for row in startings:
-        for i in row.find_all('a'):
-            if '/player/' in i.get('href'):
-                clean_url = i.get('href').rsplit('/', 2)[0]
-                player_list.append(clean_url)
-                break
-        position = row.find_all('td')[5].find('span').string
-        position_list.append(position)
-        ratings.append(int(row.find('td', class_='col-oa').find('span').string))
-    
-    
-    team_info['players'] = player_list
-    team_info['positions'] = position_list
-    team_info['ratings'] = ratings
-    team_info['budget'] = budget
+        # At this point we should have team id
+        url = str(team_url)
+        soup = get_url(url)
+
+        budget = str(soup.find('label', string='Transfer Budget').next.next).replace('\t', '')
+        budget = fix_currency(budget)
+
+        startings = soup.find_all('tr', class_='starting')
+        player_list = []
+        position_list = []
+        ratings = []
+        team_info = {}
+
+        for row in startings:
+            for i in row.find_all('a'):
+                if '/player/' in i.get('href'):
+                    clean_url = i.get('href').rsplit('/', 2)[0]
+                    player_list.append(clean_url)
+                    break
+            position = row.find_all('td')[5].find('span').string
+            position_list.append(position)
+            ratings.append(int(row.find('td', class_='col-oa').find('span').string))
+
+
+        team_info['players'] = player_list
+        team_info['positions'] = position_list
+        team_info['ratings'] = ratings
+        team_info['budget'] = budget
+    elif team is None:
+        team_info = {'players': ['']*11,
+                     'positions': ['GK', 'LB', 'LCB', 'RCB', 'RB',
+                                    'LCM', 'CM', 'RCM', 'CAM',
+                                    'LS', 'RS'],
+                     'ratings': [0]*11,
+                     'budget': 0
+                     }
+
 
     return team_info
 
